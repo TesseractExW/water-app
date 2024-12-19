@@ -1,0 +1,1 @@
+curl -d "id=0&ph=7.0&tds=150" -H "Content-Type: application/x-www-form-urlencoded" -X POST http://localhost:3000/updatesensor
