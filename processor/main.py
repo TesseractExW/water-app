@@ -17,19 +17,26 @@ class requestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-Type','text/html')
         self.end_headers()
-        message = "<h1>Data of each water checker stations</h1>"
-        message += '<table style="width:100%" border="1px">'
-        message += '<tr border="1px"><th border="1px">ID</th><th border="1px">PH</th><th border="1px">TDS</th><th border="1px">Is Drinkable</th></tr>'
+        message = '<body style="font-family:"Lucida Console", "Courier New", monospace"'
+        message += "<h1>Data of each water checker stations</h1>"
+        message += '<table style="width:100%" >'
+        message += '<tr style="background-color:7CC8C3;"><th>ID</th><th >PH</th><th >TDS</th><th>Drinkability</th></tr>'
+        i = 0
         for id , prop in data.items():
-            message += '<tr border="1px"><th border="1px">' + str(id) + '</th>'
-            for i , v in prop.items():
+            if i % 2 == 0:
+                message += '<tr style="background-color:FCF4E4;"><th>' + str(id) + '</th>'
+            else:
+                message += '<tr style="background-color:BFE6D4;"><th>' + str(id) + '</th>'
+            for _i,v in prop.items():
                 if v == np.int64(0):
                     v = 'No'
                 elif v == np.int64(1):
                     v = 'Yes'
-                message += '<th border="1px">' + str(v) + '</th>'
+                message += '<th>' + str(v) + '</th>'
             message += '</tr>'
+            i += 1
         message += '</table>'
+        message += '</body>'
         self.wfile.write(message.encode())
     def do_POST(self):
         if self.path.endswith('/updatesensor'):
@@ -43,7 +50,7 @@ class requestHandler(BaseHTTPRequestHandler):
             data[id] = {}
             data[id]['ph'] = float(fields['ph'][0])
             data[id]['tds'] = float(fields['tds'][0])
-            data[id]['drinkability'] = model.predict(data[id]['ph'],data[id]['tds'])
+            data[id]['drinkability'] = str(int(model.predict(data[id]['ph'],data[id]['tds'])[0]*100)) + '%'
             self.end_headers()
             self.wfile.write(bytes("Update sensor data successful!","utf8"))
 server = HTTPServer((address,port),requestHandler)

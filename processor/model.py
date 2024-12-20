@@ -1,8 +1,10 @@
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.svm import SVC
 # import libloader
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy import stats
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
@@ -26,7 +28,8 @@ scaler1 = RobustScaler().fit(x_train)
 x_train = scaler1.transform(x_train)
 x_test = scaler1.transform(x_test)
 # creting model
-cls = SVC(kernel='rbf', random_state = 21,gamma=0.3,C=2.0)
+base_cls = SVC(kernel='rbf', random_state = 21,gamma='auto',C=1.5)
+cls = CalibratedClassifierCV(base_cls,cv=2,method='isotonic')
 cls.fit(x_train, y_train)
 y_pred = cls.predict(x_test)
 
@@ -35,19 +38,19 @@ print("Test accuracy : " + str(accuracy_score(y_test,cls.predict(x_test))))
 
 rng = np.random.default_rng()
 def predict(ph,tds):
-    random_indices = np.random.choice(1000,  size=5,  replace=False) 
+    random_indices = np.random.choice(1000,  size=1,  replace=False) 
     features = data_frame[data_frame['Potability'] == 1].iloc[random_indices, :-1].values
     features = imputer.transform(features)
     features[:,0] = ph
-    if tds >= 500 or tds <= 10:
-        return 0
-    if ph < 5.5 or ph > 8.5:
-        return 0
-    features[:,8] = 3.7
+    features[:,2] = tds
+    # if tds >= 500 or tds <= 10:
+    #     return [0,0]
+    # if ph < 5.5 or ph > 8.5:
+    #     return [0,0]
     # print(features)
     features = scaler0.transform(features)
     features = scaler1.transform(features)
-    print(cls.predict(features))
-    return np.bincount(cls.predict(features)).argmax()
+    pred = cls.predict_proba(features)
+    return pred[0]
 
 # print(predict(7.0,150))
